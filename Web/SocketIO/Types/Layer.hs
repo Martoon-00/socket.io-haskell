@@ -51,8 +51,10 @@ instance ConnectionLayer ConnectionM where
     getHandler = envHandler <$> ask
     getConfiguration = envConfiguration <$> ask
 
+newtype StMConnection a = StMConnection { unStMConnection :: StM (ReaderT Env IO) a }
+
 instance (MonadBaseControl IO) ConnectionM where
-    newtype StM ConnectionM a = StMConnection { unStMConnection :: StM (ReaderT Env IO) a }
+    type StM ConnectionM a = StMConnection a
     liftBaseWith f = ConnectionM (liftBaseWith (\run -> f (liftM StMConnection . run . runConnectionM)))
     restoreM = ConnectionM . restoreM . unStMConnection
 
@@ -74,8 +76,10 @@ instance SessionLayer SessionM where
     getListener = sessionListener <$> ask
     getTimeoutVar = sessionTimeoutVar <$> ask
 
+newtype StMSession a = StMSession { unStMSession :: StM (ReaderT Session ConnectionM) a }
+
 instance (MonadBaseControl IO) SessionM where
-    newtype StM SessionM a = StMSession { unStMSession :: StM (ReaderT Session ConnectionM) a }
+    type StM SessionM a = StMSession a
     liftBaseWith f = SessionM (liftBaseWith (\run -> f (liftM StMSession . run . runSessionM)))
     restoreM = SessionM . restoreM . unStMSession
 

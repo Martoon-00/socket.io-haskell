@@ -2,6 +2,7 @@
 -- | String-like data structure utilities
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ConstrainedClassMethods #-}
 
 module Web.SocketIO.Types.String (
         S.IsString(..)
