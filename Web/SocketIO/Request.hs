@@ -17,6 +17,8 @@ import qualified    Data.Conduit.List               as CL
 import qualified    Network.Wai                     as Wai
 import qualified    Network.Wai.Conduit             as Wai
 
+import Debug.Trace
+
 --------------------------------------------------------------------------------
 -- | Run!
 runRequest :: (Request -> IO Message) -> Conduit Request IO (Flush Builder)
@@ -30,13 +32,13 @@ sourceHTTPRequest request = do
     let method = Wai.requestMethod request
 
     case (method, path) of
-        ("GET", (WithoutSession _ _)) -> yield Handshake
-        ("GET", (WithSession _ _ _ sessionID)) -> yield (Connect sessionID)
-        ("POST", (WithSession _ _ _ sessionID)) -> do
+        ("GET", (WithoutSession _ _)) -> trace "Handshake" $ yield Handshake
+        ("GET", (WithSession _ _ _ sessionID)) -> trace "Connect" $ yield (Connect sessionID)
+        ("POST", (WithSession _ _ _ sessionID)) -> trace "POST" $ do
            let reqSource = Wai.sourceRequestBody request
            reqSource $= demultiplexMessage =$= awaitForever (yield . Request sessionID)
         (_, (WithSession _ _ _ sessionID)) -> yield (Disconnect sessionID)
-        _ -> error "error handling http request"
+        other -> error $ "error handling http request: " ++ show other
 
 --------------------------------------------------------------------------------
 -- | Serialize Messages, frame when necessary.
